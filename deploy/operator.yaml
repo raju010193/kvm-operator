@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kvm-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: kvm-operator
+  template:
+    metadata:
+      labels:
+        name: kvm-operator
+    spec:
+      serviceAccountName: kvm-operator
+      containers:
+        - name: kvm-operator
+          # Replace this with the built image name
+          image: REPLACE_IMAGE
+          command:
+          - kvm-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "kvm-operator"

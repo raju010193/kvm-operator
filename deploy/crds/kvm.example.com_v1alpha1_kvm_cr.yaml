@@ -1,0 +1,12 @@
+apiVersion: kvm.example.com/v1alpha1
+kind: Kvm
+metadata:
+  name: centos-kvm
+spec:
+  # Add fields here
+  host: "192.168.100.9"
+  imagepath: "/var/lib/libvirt/images/centos-1.qcow2"
+  memory: "1048576"
+  VCPU: "1"
+  OStype: "qcow2"
+ 
