@@ -17,6 +17,7 @@ type KvmSpec struct {
 	Memory string `json:"memory"`
 	VCPU string 	`json:"VCPU"`
 	OStype string `json:"OStype"`
+	Connection string `json:connection,omitempty`
 
 
 }

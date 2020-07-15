@@ -130,9 +130,15 @@ func (r *ReconcileKvm) Reconcile(request reconcile.Request) (reconcile.Result, e
 	}else{
 		kvmDetails.vcpu = "1"
 	}
+	
+	if len(instance.Spec.Connection)!=0{
+		kvmDetails.ConnectionType = instance.Spec.Connection
+	}else{
+		kvmDetails.ConnectionType = "tcp"
+	}
 
 	reqLogger.Info("Info", "Kvm.Namespace", request.Namespace, "Kvm.Name", request.Name)
-	conn,err := getConnection(kvmDetails.Host,"swamym")
+	conn,err := getConnection(kvmDetails.Host,"user",kvmDetails.ConnectionType)
 	if err!=nil{
 		reqLogger.Info("error accoured", "Kvm.error", err, "Kvm.Connection", conn,"kvm.Host",kvmDetails.Host)
 		//reqLogger.Info("error accoured", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)

@@ -9,4 +9,5 @@ spec:
   memory: "1048576"
   VCPU: "1"
   OStype: "qcow2"
+  Connection: "tcp"
  

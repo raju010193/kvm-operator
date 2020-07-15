@@ -14,9 +14,10 @@ type KvmDetails struct {
 	vcpu string
 	OStype string
 	Host string
+	ConnectionType string
 
   }
-func getConnection(ipAddress string,user string)(*libvirt.Connect,error){
+func getConnection(ipAddress string,user string,connectionType string)(*libvirt.Connect,error){
 	// conn, err := libvirt.NewConnect("qemu+ssh://"+user+"@"+ipAddress+"/system")
 	callback := func(creds []*libvirt.ConnectCredential) {
 		for _, cred := range creds {
@@ -35,7 +36,7 @@ func getConnection(ipAddress string,user string)(*libvirt.Connect,error){
 		},
 		Callback: callback,
 	}
-	conn,err := libvirt.NewConnectWithAuth("qemu+tcp://"+ipAddress+"/system",auth,0)
+	conn,err := libvirt.NewConnectWithAuth("qemu+"+connectionType+"://"+ipAddress+"/system",auth,0)
 	// if err!=nil{
 	// 	fmt.Println("conne")
 	// 	log.Fatal(err)
