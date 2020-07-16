@@ -8,6 +8,7 @@ spec:
   imagepath: "/var/lib/libvirt/images/centos-1.qcow2"
   memory: "1048576"
   VCPU: "1"
-  OStype: "qcow2"
-  Connection: "tcp"
+  OStype: "hvm"
+  imagetype: "qcow2"
+  connection: "tcp"
  

@@ -118,8 +118,14 @@ func (r *ReconcileKvm) Reconcile(request reconcile.Request) (reconcile.Result, e
 	if len(instance.Spec.OStype) !=0{
 		kvmDetails.OStype = instance.Spec.OStype
 	}else{
-		kvmDetails.OStype = "qcow2"
+		kvmDetails.OStype = "hvm"
 	}
+	if len(instance.Spec.OStype) !=0{
+		kvmDetails.ImageType = instance.Spec.Imagetype
+	}else{
+		kvmDetails.ImageType = "qcow2"
+	}
+	
 
 	vcpu, err := strconv.Atoi(instance.Spec.VCPU)
 	// if err == nil {

@@ -13,6 +13,7 @@ type KvmDetails struct {
 	Memory  string
 	vcpu string
 	OStype string
+	ImageType string
 	Host string
 	ConnectionType string
 
@@ -65,7 +66,7 @@ func buildDomain(kvmDetails KvmDetails,conn libvirt.Connect) (*libvirt.Domain) {
 					<partition>/machine</partition>
 				</resource>
 				<os>
-					<type arch='x86_64' machine='pc-i440fx-bionic'>hvm</type>
+					<type arch='x86_64' machine='pc-i440fx-bionic'>`+kvmDetails.OStype+`</type>
 					<boot dev='hd'/>
 				</os>
 				<features>
@@ -99,7 +100,7 @@ func buildDomain(kvmDetails KvmDetails,conn libvirt.Connect) (*libvirt.Domain) {
 					<emulator>/usr/bin/kvm-spice</emulator>
 					
 					<disk type='file' device='disk'>
-					<driver name='qemu' type='`+kvmDetails.OStype+`'/>
+					<driver name='qemu' type='`+kvmDetails.ImageType+`'/>
 					<source file='`+kvmDetails.ImagePath+`'/>
 					<backingStore/>
 					<target dev='hda' bus='ide'/>

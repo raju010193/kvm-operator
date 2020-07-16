@@ -63,7 +63,11 @@
 
         VCPU: "1" //no of vcpu
 
-        OStype: "qcow2" //os image type
+        OStype: "hvm" //os type
+
+        imagetype: "qcow2" //image type
+
+        connection: "tcp"
 
    7. kubectl apply -f kvm-centos.yaml
 
