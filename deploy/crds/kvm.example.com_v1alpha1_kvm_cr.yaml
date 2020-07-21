@@ -6,7 +6,7 @@ spec:
   # Add fields here
   host: "192.168.100.9"
   statusSpec:
-    status: "destroy" # create, start, reboot,destroy,save,restore
+    status: "save" # create, start, reboot,destroy,save,restore
   image:
     path: "/var/lib/libvirt/images/centos-1.qcow2"
     format: "qcow2"
