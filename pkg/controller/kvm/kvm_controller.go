@@ -2,7 +2,7 @@ package kvm
 
 import (
 	"context"
-	"strconv"
+	// "strconv"
 
 	kvmv1alpha1 "github.com/raju140/kvm-operator/pkg/apis/kvm/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -99,58 +99,113 @@ func (r *ReconcileKvm) Reconcile(request reconcile.Request) (reconcile.Result, e
 		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
-	kvmDetails := KvmDetails{}
-	kvmDetails.ImageName = request.Name
-	if len(instance.Spec.Host)!=0{
-		kvmDetails.Host = instance.Spec.Host
-	}else{
-		kvmDetails.Host = "127.0.0.1" //localhost
-	}
-	if len(instance.Spec.Imagepath)!=0{
-		kvmDetails.ImagePath = instance.Spec.Imagepath
-	}
-	memory, err := strconv.Atoi(instance.Spec.Memory)
-	if memory >=1048576{
-		kvmDetails.Memory = instance.Spec.Memory
-	}else{
-		kvmDetails.Memory = "1048576" //kib
-	}
-	if len(instance.Spec.OStype) !=0{
-		kvmDetails.OStype = instance.Spec.OStype
-	}else{
-		kvmDetails.OStype = "hvm"
-	}
-	if len(instance.Spec.OStype) !=0{
-		kvmDetails.ImageType = instance.Spec.Imagetype
-	}else{
-		kvmDetails.ImageType = "qcow2"
-	}
-	
-
-	vcpu, err := strconv.Atoi(instance.Spec.VCPU)
-	// if err == nil {
-	// 	fmt.Println(i1)
-	// }
-	if vcpu !=0{
-		kvmDetails.vcpu = instance.Spec.VCPU
-	}else{
-		kvmDetails.vcpu = "1"
-	}
-	
+	reqLogger.Info("error accoured", instance.Spec)
+	var ConnectionType string
+	var Host string
 	if len(instance.Spec.Connection)!=0{
-		kvmDetails.ConnectionType = instance.Spec.Connection
+	    ConnectionType = instance.Spec.Connection
 	}else{
-		kvmDetails.ConnectionType = "tcp"
+		ConnectionType = "tcp"
 	}
+	if len(instance.Spec.Host)!=0{
+	    Host = instance.Spec.Host
+	}else{
+		Host = "127.0.0.1"
+	}
+	domainName := request.Name
 
-	reqLogger.Info("Info", "Kvm.Namespace", request.Namespace, "Kvm.Name", request.Name)
-	conn,err := getConnection(kvmDetails.Host,"user",kvmDetails.ConnectionType)
+	conn,err := getConnection(Host,"user",ConnectionType)
 	if err!=nil{
-		reqLogger.Info("error accoured", "Kvm.error", err, "Kvm.Connection", conn,"kvm.Host",kvmDetails.Host)
+		reqLogger.Info("error accoured", "Kvm.error", err, "Kvm.Connection", conn,"kvm.Host",Host)
 		//reqLogger.Info("error accoured", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 		return reconcile.Result{}, err
 	}
-	err = create(kvmDetails,*conn)
+	if (instance.Spec.StatusSpec.Status == "create"){
+		kvmDetails,er := ValidateData(*instance,domainName)
+		if er!=0{
+			return reconcile.Result{},err
+		}
+		err = create(kvmDetails,*conn)
+		reqLogger.Info("error accoured", "Kvm.error", err, "Kvm.Connection", conn,"kvm.Host",kvmDetails.Host)	
+		if err!=nil{
+			return reconcile.Result{},err
+		}
+
+	}
+	if (instance.Spec.StatusSpec.Status == "update"){
+		kvmDetails,er := ValidateData(*instance,domainName)
+		if er!=0{
+			return reconcile.Result{},err
+		}
+		dom,err := getKVMDomainByName(domainName,*conn)
+		if err!=nil{
+			reqLogger.Info("error accoured", "Pod.Namespace", err, "Pod.Name", request.Name)
+			return reconcile.Result{}, err
+		}
+		err = DomainSetVcpus(kvmDetails,*dom)
+		if err!=nil{
+			reqLogger.Info("set domin vcpu value", err)
+		}
+		err = DomainSetMemory(kvmDetails,*dom)
+
+		if err!=nil{
+			reqLogger.Info("is update memory value", err)
+		}
+
+	}
+	if ( instance.Spec.StatusSpec.Status == "reboot"){
+		dom,err := getKVMDomainByName(domainName,*conn)
+		err = DomainShutdownReboot(*dom)
+		if err!=nil{
+			return reconcile.Result{}, err
+		}
+		
+	}
+	if (instance.Spec.StatusSpec.Status == "shutdown"){
+		dom,err := getKVMDomainByName(domainName,*conn)
+		err = KvmShutdownDomain(*dom)
+		if err!=nil{
+			reqLogger.Info("domain shutdown error", err)
+			return reconcile.Result{}, err
+		}
+
+	}
+	if (instance.Spec.StatusSpec.Status == "save"){
+		dom,err := getKVMDomainByName(domainName,*conn)
+		err = SaveDomain(domainName,*dom)
+		if err!=nil{
+			return reconcile.Result{}, err
+		}
+		
+	}
+	if (instance.Spec.StatusSpec.Status == "restore"){
+		dom,err := getKVMDomainByName(domainName,*conn)
+		err = RestoreDomain(domainName,*dom,*conn)
+		if err!=nil{
+			return reconcile.Result{}, err
+		}
+		
+	}
+	if (instance.Spec.StatusSpec.Status == "destroy"){
+		dom,err := getKVMDomainByName(domainName,*conn)
+		err = KvmDestroyDomain(*dom)
+		if err!=nil{
+			return reconcile.Result{}, err
+		}
+		
+	}
+	if (instance.Spec.StatusSpec.Status == "start"){
+		dom,err := getKVMDomainByName(domainName,*conn)
+		err = DomainAutoStart(*dom)
+		if err!=nil{
+			return reconcile.Result{}, err
+		}
+		
+	}
+	// else{
+	// 	return reconcile.Result{},err
+	// }
+	
 	//listDomain(*conn)
 	//dom,err:=listRunningDomains(*conn)
 	if err != nil{

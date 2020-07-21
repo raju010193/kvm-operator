@@ -5,10 +5,27 @@ metadata:
 spec:
   # Add fields here
   host: "192.168.100.9"
-  imagepath: "/var/lib/libvirt/images/centos-1.qcow2"
-  memory: "1048576"
-  VCPU: "1"
+  statusSpec:
+    status: "destroy" # create, start, reboot,destroy,save,restore
+  image:
+    path: "/var/lib/libvirt/images/centos-1.qcow2"
+    format: "qcow2"
+    device: "disk"
+    type: "file"
+  drive:
+    drive: "cdrom"
+    type: "file"
+  interface:
+    interfaceType: "network"
+    bridge: "virbr0"
+    model: "rtl8139"
+    macAddress: "52:54:00:59:30:69"
+  memory:
+    current: 4048576
+    max: 10048576
+  VCPU: 
+    current: "4"
+    max: "10"
   OStype: "hvm"
-  imagetype: "qcow2"
   connection: "tcp"
  
