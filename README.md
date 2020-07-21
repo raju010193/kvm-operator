@@ -45,30 +45,8 @@
 
   6. set the kvm-centos.yaml file
      
-      apiVersion: kvm.example.com/v1alpha1
-
-      kind: Kvm
-
-      metadata:
-
-         name: centos-kvm
-
-      spec:
-
-        host: "x.x.x.x" // remote host ip
-
-        imagepath: "/var/lib/libvirt/images/centos-1.qcow2" // image path
-
-        memory: "1048576" // ram size
-
-        VCPU: "1" //no of vcpu
-
-        OStype: "hvm" //os type
-
-        imagetype: "qcow2" //image type
-
-        connection: "tcp"
-
+      https://github.com/raju010193/kvm-operator/blob/master/deploy/crds/kvm.example.com_v1alpha1_kvm_cr.yaml
+      
    7. kubectl apply -f kvm-centos.yaml
 
    if you want to check the running VMs

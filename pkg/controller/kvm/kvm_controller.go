@@ -125,11 +125,12 @@ func (r *ReconcileKvm) Reconcile(request reconcile.Request) (reconcile.Result, e
 		if er!=0{
 			return reconcile.Result{},err
 		}
-		err = create(kvmDetails,*conn)
-		reqLogger.Info("error accoured", "Kvm.error", err, "Kvm.Connection", conn,"kvm.Host",kvmDetails.Host)	
+		err = create(kvmDetails,*conn)	
 		if err!=nil{
+			reqLogger.Info("Domain Creation Failed", "KVM.error", err, "KVM.Name", request.Name)
 			return reconcile.Result{},err
 		}
+		reqLogger.Info("Domain created",  "KVM.Name", request.Name)
 
 	}
 	if (instance.Spec.StatusSpec.Status == "update"){
@@ -139,7 +140,7 @@ func (r *ReconcileKvm) Reconcile(request reconcile.Request) (reconcile.Result, e
 		}
 		dom,err := getKVMDomainByName(domainName,*conn)
 		if err!=nil{
-			reqLogger.Info("error accoured", "Pod.Namespace", err, "Pod.Name", request.Name)
+			reqLogger.Info("Domain Updation setVCPU Failed", "KVM.error", err, "KVM.Name", request.Name)
 			return reconcile.Result{}, err
 		}
 		err = DomainSetVcpus(kvmDetails,*dom)
@@ -149,123 +150,76 @@ func (r *ReconcileKvm) Reconcile(request reconcile.Request) (reconcile.Result, e
 		err = DomainSetMemory(kvmDetails,*dom)
 
 		if err!=nil{
-			reqLogger.Info("is update memory value", err)
+			reqLogger.Info("Domain Updation setMemory Failed", "KVM.error", err, "KVM.Name", request.Name)
+			return reconcile.Result{}, err
 		}
+		reqLogger.Info("Domain Updated",  "KVM.Name", request.Name)
+		
 
 	}
 	if ( instance.Spec.StatusSpec.Status == "reboot"){
 		dom,err := getKVMDomainByName(domainName,*conn)
 		err = DomainShutdownReboot(*dom)
 		if err!=nil{
+			reqLogger.Info("VM ShutdownReboot Failed", "KVM.error", err, "KVM.Name", request.Name)
 			return reconcile.Result{}, err
 		}
+		reqLogger.Info("VM ShutdownReboot",  "KVM.Name", request.Name)
 		
 	}
 	if (instance.Spec.StatusSpec.Status == "shutdown"){
 		dom,err := getKVMDomainByName(domainName,*conn)
 		err = KvmShutdownDomain(*dom)
 		if err!=nil{
-			reqLogger.Info("domain shutdown error", err)
+			reqLogger.Info("VM Shutdown Failed", "KVM.error", err, "KVM.Name", request.Name)
 			return reconcile.Result{}, err
 		}
-
+		reqLogger.Info("VM Shutdown",  "KVM.Name", request.Name)
 	}
 	if (instance.Spec.StatusSpec.Status == "save"){
 		dom,err := getKVMDomainByName(domainName,*conn)
 		err = SaveDomain(domainName,*dom)
 		if err!=nil{
+			reqLogger.Info("VM Save Failed", "KVM.error", err, "KVM.Name", request.Name)
 			return reconcile.Result{}, err
 		}
+		reqLogger.Info("VM Saved",  "KVM.Name", request.Name)
 		
 	}
 	if (instance.Spec.StatusSpec.Status == "restore"){
 		dom,err := getKVMDomainByName(domainName,*conn)
 		err = RestoreDomain(domainName,*dom,*conn)
 		if err!=nil{
+			reqLogger.Info("Restored Failed", "KVM.error", err, "KVM.Name", request.Name)
 			return reconcile.Result{}, err
 		}
+		reqLogger.Info("Restored",  "KVM.Name", request.Name)
 		
 	}
 	if (instance.Spec.StatusSpec.Status == "destroy"){
 		dom,err := getKVMDomainByName(domainName,*conn)
 		err = KvmDestroyDomain(*dom)
 		if err!=nil{
+			reqLogger.Info("Destroyed Failed", "KVM.error", err, "KVM.Name", request.Name)
 			return reconcile.Result{}, err
 		}
+		reqLogger.Info("Distroyed",  "KVM.Name", request.Name)
 		
 	}
 	if (instance.Spec.StatusSpec.Status == "start"){
 		dom,err := getKVMDomainByName(domainName,*conn)
 		err = DomainAutoStart(*dom)
 		if err!=nil{
+			reqLogger.Info("error accoured", "KVM.Error", err, "KVM.Name", request.Name)
 			return reconcile.Result{}, err
 		}
-		
+		reqLogger.Info("Started",  "KVM.Name", request.Name)
 	}
-	// else{
-	// 	return reconcile.Result{},err
-	// }
-	
-	//listDomain(*conn)
-	//dom,err:=listRunningDomains(*conn)
+
 	if err != nil{
-		reqLogger.Info("error accoured", "Pod.Namespace", err, "Pod.Name", request.Name)
+		reqLogger.Info("error accoured", "KVM.Error", err, "KVM.Name", request.Name)
 		return reconcile.Result{}, err
 	}
-	//fmt.Println(dom)/var/lib/libvirt/images/generic.qcow2
-
-	// Define a new Pod object
-	// pod := newPodForCR(instance)
-
-	// // Set Kvm instance as the owner and controller
-	// if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-	// 	return reconcile.Result{}, err
-	// }
-
-	// // Check if this Pod already exists
-	// found := &corev1.Pod{}
-	// err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	// if err != nil && errors.IsNotFound(err) {
-	// 	reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-	// 	err = r.client.Create(context.TODO(), pod)
-	// 	if err != nil {
-	// 		return reconcile.Result{}, err
-	// 	}
-
-	// 	// Pod created successfully - don't requeue
-	// 	return reconcile.Result{}, nil
-	//  if err != nil {
-	// 	reqLogger.Info("error accoured", "Pod.Namespace", err, "Pod.Name", request.Namespace)
-	// 	return reconcile.Result{}, err
-	// }
-	// if dom == nil {
-	// 	return reconcile.Result{},err
-	// }
-
-	// Pod already exists - don't requeue
 //	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
 	return reconcile.Result{}, nil
-}
-
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *kvmv1alpha1.Kvm) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
-	}
 }
